@@ -6,13 +6,14 @@
   */
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling
 
-import edu.illinois.cs.cogcomp.lbjava.learn.SupportVectorMachine
-import edu.illinois.cs.cogcomp.saul.classifier.{Learnable, SparseNetworkLBP}
+import edu.illinois.cs.cogcomp.lbjava.learn.{SupportVectorMachine, SparsePerceptron}
+import edu.illinois.cs.cogcomp.saul.classifier.{Learnable}
 import edu.illinois.cs.cogcomp.saul.datamodel.property.Property
 
 /** Created by taher on 8/16/16.
   */
 object RobertsClassifiers {
+
   import RobertsDataModel._
 
   val robertsFeatures = List(JF2_1, JF2_2, JF2_3, JF2_4, JF2_5, JF2_6, JF2_7, JF2_8,
@@ -20,7 +21,7 @@ object RobertsClassifiers {
 
   object robertsSupervised2Classifier extends Learnable[RobertsRelation](relations) {
 
-    override lazy val classifier = new SupportVectorMachine()
+    override lazy val classifier = new SparsePerceptron()
 
     def label: Property[RobertsRelation] = relationLabel
 
