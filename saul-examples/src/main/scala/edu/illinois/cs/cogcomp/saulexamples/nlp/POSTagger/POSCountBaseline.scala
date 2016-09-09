@@ -7,7 +7,6 @@
 package edu.illinois.cs.cogcomp.saulexamples.nlp.POSTagger
 
 import edu.illinois.cs.cogcomp.pos.POSBaselineLearner
-
 class POSCountBaseline extends POSBaselineLearner {
   // nothing
 }
