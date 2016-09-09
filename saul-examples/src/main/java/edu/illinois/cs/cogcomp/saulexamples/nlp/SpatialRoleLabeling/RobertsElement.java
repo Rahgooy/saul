@@ -58,6 +58,13 @@ public class RobertsElement implements Comparable<RobertsElement> {
                 .getConstituentsCoveringSpan(span.getFirst(), span.getSecond());
         return c.get(c.size() - 1);
     }
+    public Constituent getConstituent(int x) {
+        if (span == null)
+            return null;
+        List<Constituent> c = getTextAnnotation().getView(ViewNames.TOKENS)
+                .getConstituentsCoveringSpan(span.getFirst(), span.getSecond());
+        return x < c.size() ? c.get(x) : null;
+    }
 
     public IntPair getSpan() {
         return span;

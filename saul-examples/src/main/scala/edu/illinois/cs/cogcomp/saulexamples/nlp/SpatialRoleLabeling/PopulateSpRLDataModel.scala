@@ -7,15 +7,16 @@
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling
 
 import edu.illinois.cs.cogcomp.saul.util.Logging
-
 import java.lang.Boolean
+
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashSet
+import scala.io.Source
 
 /** Created by taher on 7/28/16.
   */
 object PopulateSpRLDataModel extends Logging {
-  def apply(path: String, isTraining: Boolean, dataVersion: String, modelName: String, savedLexicon: HashSet[String]) = {
+  def apply(path: String, visualDicPath: String,  isTraining: Boolean, dataVersion: String, modelName: String, savedLexicon: HashSet[String]) = {
 
     modelName match {
       case "Roberts" =>
@@ -23,10 +24,18 @@ object PopulateSpRLDataModel extends Logging {
         val sentences: List[SpRLSentence] = SpRLDataModelReader.read(path, dataVersion)
 
         Dictionaries.spLexicon = getLex(sentences)
+        Dictionaries.visualWordVocab = getVisualFeaturesDictionary(visualDicPath)
+        assert(Dictionaries.visualWordVocab.size == 4999)
         RobertsDataModel.sentences.populate(sentences, train = isTraining)
     }
   }
 
+  def getVisualFeaturesDictionary(path: String): Map[String, List[Double]] = {
+    val vectors = Source.fromFile(path + "/" + "embeddings_excel.csv").getLines
+      .map(_.split(",").map(_.toDouble).toList).toList
+    val vocab = Source.fromFile(path + "/" + "vocabulary_excel.csv").getLines.toList
+    (vocab zip vectors).toMap
+  }
   def getLexicon(docs: List[SpRLSentence]): HashSet[String] = {
     val dic: Seq[String] = Dictionaries.prepositions.toSeq
     val indicators: Seq[String] = docs.flatMap(d => d.getRelations.

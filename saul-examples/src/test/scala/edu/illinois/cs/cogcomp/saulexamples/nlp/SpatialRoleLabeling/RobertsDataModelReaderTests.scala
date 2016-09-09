@@ -6,13 +6,14 @@ import org.scalatest.{ FlatSpec, Matchers }
   */
 class RobertsDataModelReaderTests extends FlatSpec with Matchers {
   val path = getResourcePath("SpRL/2012/")
+  val vPath = getResourcePath("SpRL/")
 
   private def getResourcePath(relativePath: String): String =
     getClass.getClassLoader.getResource(relativePath).getPath
 
   import RobertsDataModel._
 
-  PopulateSpRLDataModel(path, true, "2012", "Roberts", null)
+  PopulateSpRLDataModel(path, vPath,  true, "2012", "Roberts", null)
 
   "Roberts Data Model Reader" should "Read data correctly." in {
 

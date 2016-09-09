@@ -6,7 +6,7 @@
   */
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling
 
-import edu.illinois.cs.cogcomp.core.datastructures.{ IntPair, ViewNames }
+import edu.illinois.cs.cogcomp.core.datastructures.{IntPair, ViewNames}
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation._
 import edu.illinois.cs.cogcomp.edison.features.helpers.PathFeatureHelper
 import edu.illinois.cs.cogcomp.nlp.utilities.CollinsHeadFinder
@@ -198,4 +198,18 @@ object SpRLSensors extends Logging {
     startTokenId
   }
 
+  def getHeadwordId(x: Constituent): Int = {
+
+    val ta = x.getTextAnnotation
+    val phrases = ta.getView(ViewNames.SHALLOW_PARSE).getConstituentsCovering(x).asScala
+    val phrase = phrases.head
+    val tree: TreeView = ta.getView(ViewNames.PARSE_STANFORD).asInstanceOf[TreeView]
+    val parsePhrase = tree.getParsePhrase(phrase)
+
+    CollinsHeadFinder.getInstance.getHeadWordPosition(parsePhrase)
+  }
+
+  def getHeadword(x: Constituent): String = {
+    x.getTextAnnotation.getToken(getHeadwordId(x))
+  }
 }

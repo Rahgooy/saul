@@ -34,6 +34,7 @@ object SpRLApp extends App with Logging {
   val isTrain = properties.getBoolean(IS_TRAINING)
   val version = properties.getString(VERSION)
   var modelName = properties.getString(MODEL_NAME)
+  var visualVocabDir = properties.getString(VISUAL_VOCAB_DIR)
 
   logger.info("population starts.")
 
@@ -42,7 +43,7 @@ object SpRLApp extends App with Logging {
       val name = "robertsSupervised2"
       val lexPath = modelDir + version + File.separator + name + File.separator + "lexicon.lex"
       val lex = if (isTrain) null else loadRobertsLexicon(lexPath)
-      PopulateSpRLDataModel(getDataPath(), isTrain, version, modelName, lex)
+      PopulateSpRLDataModel(getDataPath(), visualVocabDir, isTrain, version, modelName, lex)
       if (isTrain) {
         saveRobertsLexicon(lexPath)
       }

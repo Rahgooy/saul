@@ -19,6 +19,8 @@ object Dictionaries {
   )
   var spLexicon = HashSet[String]()
 
+  var visualWordVocab = Map[String, List[Double]]()
+
   def isPreposition(word: String): Boolean = {
     val w = if (word == null) "" else word.toLowerCase.trim
     prepositions.contains(w)

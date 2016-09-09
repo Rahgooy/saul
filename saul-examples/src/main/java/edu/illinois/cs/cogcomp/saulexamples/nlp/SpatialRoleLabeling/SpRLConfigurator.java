@@ -19,10 +19,11 @@ public class SpRLConfigurator extends Configurator {
 //    public static final Property TRAIN_DIR = new Property("trainDir","data/SpRL/2013/ConfluenceProject/train");
     public static final Property TEST_DIR = new Property("testDir","data/SpRL/2013/IAPR TC-12/gold");
     public static final Property TRAIN_DIR = new Property("trainDir","data/SpRL/2013/IAPR TC-12/train");
+    public static final Property VISUAL_VOCAB_DIR = new Property("visualVocabDir","data/SpRL");
     public static final Property MODELS_DIR = new Property("modelsDir","models");
 
     public static final Property VERSION = new Property("version","2012");
-    public static final Property IS_TRAINING = new Property("isTraining", Configurator.FALSE);
+    public static final Property IS_TRAINING = new Property("isTraining", Configurator.TRUE);
 
     /*********** SpRL PROPERTIES ***********/
     // The (sub)directory to store and retrieve the trained SpRL models (to be used with MODELS_DIR)
@@ -34,7 +35,7 @@ public class SpRLConfigurator extends Configurator {
     @Override
     public ResourceManager getDefaultConfig() {
         Property[] properties = {TEST_DIR, TRAIN_DIR, IS_TRAINING, VERSION, MODELS_DIR,
-                SpRL_MODEL_DIR, MODEL_NAME};
+                SpRL_MODEL_DIR, MODEL_NAME, VISUAL_VOCAB_DIR};
         return new ResourceManager(generateProperties(properties));
     }
 }
