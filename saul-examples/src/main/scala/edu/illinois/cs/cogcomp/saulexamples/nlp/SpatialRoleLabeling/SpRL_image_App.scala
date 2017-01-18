@@ -2,7 +2,7 @@ package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling
 
 import edu.illinois.cs.cogcomp.saul.datamodel.DataModel
 import edu.illinois.cs.cogcomp.saulexamples.data.ImageReader
-import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes.Image
+import edu.illinois.cs.cogcomp.saulexamples.vision.Image
 
 import scala.collection.JavaConversions._
 

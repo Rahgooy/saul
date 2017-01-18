@@ -1,4 +1,4 @@
-package edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes;
+package edu.illinois.cs.cogcomp.saulexamples.vision;
 
 /**
  * Created by Umar Manzoor on 29/12/2016.
