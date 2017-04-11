@@ -289,26 +289,25 @@ object MultiModalSpRLDataModel extends DataModel {
   }
 
   val imageConfirmsRelation = property(pairs, cache = true) {
-    var result = false
     r: Relation =>
       val (x, rel) = getArguments(r)
       val img = ((pairs(r)<~sentenceToRelations<~documentToSentence)~>documentToImage).head
       val seg = images(img)~> imageToSegment
-
-      val imageRelations = segmentRelations.getAllInstances.filter(sr=> sr.getImageId().equals(img.getId()))
-      imageRelations.foreach(s => {
-        val firstConcept = getSegmentConcepts(img.getId(), s.getFirstSegmentId())
-        val secondConcept = getSegmentConcepts(img.getId(), s.getSecondSegmentId())
-        val relation = s.getRelation()
-        if ((x.getText().toLowerCase().equals(firstConcept.toLowerCase()) || x.getText().toLowerCase().equals(secondConcept.toLowerCase())) && (rel.getText().toLowerCase().equals(relation.toLowerCase()))) {
-          result = true
+      val imageRelations = images(img)~> imageToSegment<~ segmentRelationsToSegments
+      imageRelations.exists(ir => {
+        val fc = seg.find(s=> {s.getSegmentId()==ir.getFirstSegmentId()})
+        val sc = seg.find(s=> {s.getSegmentId()==ir.getSecondSegmentId()})
+        var firstConcept = ""
+        var secondConcept = ""
+        if (fc.nonEmpty) {
+          firstConcept = fc.get.getSegmentConcept()
         }
-        else {
-          result = false
+        if (sc.nonEmpty) {
+          secondConcept= sc.get.getSegmentConcept()
         }
-      }
-    )
-    result
+        val relation = ir.getRelation()
+        (x.getText().toLowerCase().equals(firstConcept.toString().toLowerCase()) || x.getText().toLowerCase().equals(secondConcept.toString().toLowerCase())) && (rel.getText().toLowerCase().equals(relation.toLowerCase()))
+      })
   }
 
   val relationHeadWordPos = property(pairs, cache = true) {
@@ -457,18 +456,5 @@ object MultiModalSpRLDataModel extends DataModel {
           x.getSegmentConcept
         else
           phraseConceptToWord(x.getSegmentConcept))
-  }
-
-  private def getSegmentConcepts(img: String, seg: Integer): String = {
-    var concept = ""
-    val segmentFiltered = segments.getAllInstances.filter( s => {
-      s.getAssociatedImageID().equals(img) &&
-      s.getSegmentId()==(seg)
-    })
-    segmentFiltered.foreach(i=> {
-      concept = i.getSegmentConcept();
-      concept
-    })
-    concept
   }
 }

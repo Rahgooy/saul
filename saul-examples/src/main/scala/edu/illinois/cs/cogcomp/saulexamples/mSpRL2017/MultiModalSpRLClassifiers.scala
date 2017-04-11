@@ -35,11 +35,11 @@ object MultiModalSpRLClassifiers {
   def relationFeatures: List[Property[Relation]] = relationFeatures(featureSet)
 
   def relationFeatures(featureSet: FeatureSets): List[Property[Relation]] =
-    List(relationWordForm, relationHeadWordForm, relationPos, imageConfirmsRelation, relationHeadWordPos, relationPhrasePos,
+    List(relationWordForm, relationHeadWordForm, relationPos, relationHeadWordPos, relationPhrasePos,
       relationSemanticRole, relationDependencyRelation, relationSubCategorization, relationHeadSpatialContext,
       distance, before, isTrajectorCandidate, isLandmarkCandidate, isIndicatorCandidate) ++
       (featureSet match {
-        case FeatureSets.BaseLineWithImage => List(relationIsImageConcept)
+        case FeatureSets.BaseLineWithImage => List(relationIsImageConcept, imageConfirmsRelation)
         case FeatureSets.WordEmbedding => List(relationTokensVector)
         case FeatureSets.WordEmbeddingPlusImage => List(relationTokensVector, relationNearestSegmentConceptToHeadVector,
           relationNearestSegmentConceptToPhraseVector, relationIsImageConcept)
