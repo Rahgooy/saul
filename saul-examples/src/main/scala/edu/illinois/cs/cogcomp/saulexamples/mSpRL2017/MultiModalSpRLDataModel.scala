@@ -310,7 +310,8 @@ object MultiModalSpRLDataModel extends DataModel {
           secondConcept = sc.get.getSegmentConcept()
         }
         val relation = ir.getRelation()
-        (x.getText().toLowerCase().equals(firstConcept.toString().toLowerCase()) || x.getText().toLowerCase().equals(secondConcept.toString().toLowerCase())) && (rel.getText().toLowerCase().equals(relation.toLowerCase()))
+        val result = (x.getText().toLowerCase().contains(firstConcept.toString().toLowerCase()) || fc.get.isexistOntologyConcepts(x.getText().toLowerCase()) || x.getText().toLowerCase().contains(secondConcept.toString().toLowerCase()) || sc.get.isexistOntologyConcepts(x.getText().toLowerCase())) && (rel.getText().toLowerCase().contains(relation.toLowerCase()))
+        result
       })
   }
 
