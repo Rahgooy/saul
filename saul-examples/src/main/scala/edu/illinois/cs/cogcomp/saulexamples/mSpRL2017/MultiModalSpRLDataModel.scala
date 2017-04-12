@@ -291,19 +291,23 @@ object MultiModalSpRLDataModel extends DataModel {
   val imageConfirmsRelation = property(pairs, cache = true) {
     r: Relation =>
       val (x, rel) = getArguments(r)
-      val img = ((pairs(r)<~sentenceToRelations<~documentToSentence)~>documentToImage).head
-      val seg = images(img)~> imageToSegment
-      val imageRelations = images(img)~> imageToSegment<~ segmentRelationsToSegments
+      val img = (((pairs(r) ~> relationToSecondArgument) <~ sentenceToPhrase <~ documentToSentence) ~> documentToImage).head
+      val seg = images(img) ~> imageToSegment
+      val imageRelations = images(img) ~> imageToSegment <~ segmentRelationsToSegments
       imageRelations.exists(ir => {
-        val fc = seg.find(s=> {s.getSegmentId()==ir.getFirstSegmentId()})
-        val sc = seg.find(s=> {s.getSegmentId()==ir.getSecondSegmentId()})
+        val fc = seg.find(s => {
+          s.getSegmentId() == ir.getFirstSegmentId()
+        })
+        val sc = seg.find(s => {
+          s.getSegmentId() == ir.getSecondSegmentId()
+        })
         var firstConcept = ""
         var secondConcept = ""
         if (fc.nonEmpty) {
           firstConcept = fc.get.getSegmentConcept()
         }
         if (sc.nonEmpty) {
-          secondConcept= sc.get.getSegmentConcept()
+          secondConcept = sc.get.getSegmentConcept()
         }
         val relation = ir.getRelation()
         (x.getText().toLowerCase().equals(firstConcept.toString().toLowerCase()) || x.getText().toLowerCase().equals(secondConcept.toString().toLowerCase())) && (rel.getText().toLowerCase().equals(relation.toLowerCase()))
