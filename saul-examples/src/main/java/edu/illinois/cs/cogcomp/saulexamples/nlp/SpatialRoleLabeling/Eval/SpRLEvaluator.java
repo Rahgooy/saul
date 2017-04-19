@@ -7,14 +7,11 @@
  */
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.Eval;
 
-import edu.illinois.cs.cogcomp.lbjava.classify.TestDiscrete;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.FilterOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -23,7 +20,7 @@ import java.util.List;
  */
 public class SpRLEvaluator {
 
-    public void printEvaluation(List<SpRLEvaluation> eval) {
+    public static void printEvaluation(List<SpRLEvaluation> eval) {
         printEvaluation(System.out, eval);
     }
 
@@ -52,7 +49,7 @@ public class SpRLEvaluator {
     }
 
     public List<SpRLEvaluation> evaluateRoles(RolesEvalDocument actual, RolesEvalDocument predicted) {
-        return evaluateRoles(actual, predicted, new DefaultComparer());
+        return evaluateRoles(actual, predicted, new ExactComparer());
     }
 
     public List<SpRLEvaluation> evaluateRoles(RolesEvalDocument actual, RolesEvalDocument predicted, EvalComparer comparer) {
@@ -67,7 +64,7 @@ public class SpRLEvaluator {
     }
 
     public List<SpRLEvaluation> evaluateRelations(RelationsEvalDocument actual, RelationsEvalDocument predicted) {
-        return evaluateRelations(actual, predicted, new DefaultComparer());
+        return evaluateRelations(actual, predicted, new ExactComparer());
     }
 
     public List<SpRLEvaluation> evaluateRelations(RelationsEvalDocument actual, RelationsEvalDocument predicted,
@@ -82,8 +79,8 @@ public class SpRLEvaluator {
     private <T extends SpRLEval> SpRLEvaluation evaluate(String label, List<T> actualList, List<T> predictedList,
                                                          EvalComparer comparer) {
         int tp = 0;
-        List<T> actual = distinct(actualList, comparer);
-        List<T> predicted = distinct(predictedList, comparer);
+        List<T> actual = distinct(actualList);
+        List<T> predicted = distinct(predictedList);
         int predictedCount = predicted.size();
         int actualCount = actual.size();
 
@@ -101,10 +98,9 @@ public class SpRLEvaluator {
 
         int fp = predictedCount - tp;
         int fn = actualCount - tp;
-        double precision = (double) tp / (tp + fp) * 100;
-        double recall = (double) tp / (tp + fn) * 100;
-        double f1 = 2 * precision * recall / (precision + recall);
-
+        double precision = tp == 0 ? 0 : (double) tp / (tp + fp) * 100;
+        double recall = tp == 0 ? 0 : (double) tp / (tp + fn) * 100;
+        double f1 = precision == 0 || recall == 0 ? 0 : 2 * precision * recall / (precision + recall);
 
         return new SpRLEvaluation(
                 label,
@@ -116,7 +112,7 @@ public class SpRLEvaluator {
         );
     }
 
-    private <T extends SpRLEval> List<T> distinct(List<T> l, EvalComparer comparer) {
+    private <T extends SpRLEval> List<T> distinct(List<T> l) {
         HashSet<T> set = new HashSet<T>();
         List<T> newList = new ArrayList<T>();
         set.add(l.get(0));
