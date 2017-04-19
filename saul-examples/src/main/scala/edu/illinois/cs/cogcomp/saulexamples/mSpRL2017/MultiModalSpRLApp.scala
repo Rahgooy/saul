@@ -69,7 +69,7 @@ object MultiModalSpRLApp extends App with Logging {
       classifiers.foreach(classifier => {
         if (classifier == TrajectorPairClassifier || classifier == LandmarkPairClassifier) {
           if (!pairsPopulated) {
-            populatePairDataFromAnnotatedCorpus(xmlReader, isTrain, x => IndicatorRoleClassifier(x) == "Indicator")
+            populatePairDataFromAnnotatedCorpus(xmlReader, isTrain, x => SentenceLevelConstraintClassifiers.IndicatorConstraintClassifier(x) == "Indicator")
             ReportHelper.saveCandidateList(true, pairs.getTrainingInstances.toList)
             pairsPopulated = true
           }
@@ -86,7 +86,7 @@ object MultiModalSpRLApp extends App with Logging {
         classifier.load()
         if (classifier == TrajectorPairClassifier || classifier == LandmarkPairClassifier) {
           if (!pairsPopulated) {
-            populatePairDataFromAnnotatedCorpus(xmlReader, isTrain, x => IndicatorRoleClassifier(x) == "Indicator")
+            populatePairDataFromAnnotatedCorpus(xmlReader, isTrain, x => SentenceLevelConstraintClassifiers.IndicatorConstraintClassifier(x) == "Indicator")
             ReportHelper.saveCandidateList(false, pairs.getTestingInstances.toList)
             pairsPopulated = true
           }
