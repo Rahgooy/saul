@@ -57,9 +57,13 @@ public class Segment {
         return segmentConcept;
     }
 
-    public List<String> getOntologyConcepts()
+    public boolean isexistOntologyConcepts(String x)
     {
-        return ontologyConcepts;
+        for(String o : ontologyConcepts) {
+            if(x.contains(o.toLowerCase()))
+                return true;
+        }
+        return false;
     }
 
     @Override

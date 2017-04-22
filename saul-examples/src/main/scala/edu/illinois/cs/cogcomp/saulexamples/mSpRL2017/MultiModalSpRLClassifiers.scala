@@ -39,7 +39,7 @@ object MultiModalSpRLClassifiers {
       relationSemanticRole, relationDependencyRelation, relationSubCategorization, relationHeadSpatialContext,
       distance, before, isTrajectorCandidate, isLandmarkCandidate, isIndicatorCandidate) ++
       (featureSet match {
-        case FeatureSets.BaseLineWithImage => List(relationIsImageConcept)
+        case FeatureSets.BaseLineWithImage => List(relationIsImageConcept, imageConfirmsRelation)
         case FeatureSets.WordEmbedding => List(relationTokensVector)
         case FeatureSets.WordEmbeddingPlusImage => List(relationTokensVector, relationNearestSegmentConceptToHeadVector,
           relationNearestSegmentConceptToPhraseVector, relationIsImageConcept)
