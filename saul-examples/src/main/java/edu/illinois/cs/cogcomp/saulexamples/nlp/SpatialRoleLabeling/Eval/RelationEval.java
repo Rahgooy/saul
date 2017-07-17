@@ -1,9 +1,3 @@
-/** This software is released under the University of Illinois/Research and Academic Use License. See
-  * the LICENSE file in the root folder for details. Copyright (c) 2016
-  *
-  * Developed by: The Cognitive Computations Group, University of Illinois at Urbana-Champaign
-  * http://cogcomp.cs.illinois.edu/
-  */
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.Eval;
 
 import javax.xml.bind.annotation.*;
@@ -19,6 +13,10 @@ public class RelationEval implements SpRLEval {
     private final RoleEval tr;
     private final RoleEval sp;
     private final RoleEval lm;
+    private String generalType;
+    private String SpecificType;
+    private String RCC8;
+    private String FoR;
 
     public RelationEval() {
         this(-1, -1, -1, -1, -1, -1);
@@ -99,14 +97,6 @@ public class RelationEval implements SpRLEval {
         this.spatialIndicatorEnd = spatialIndicatorEnd;
     }
 
-    public boolean contains(RelationEval p) {
-        return sp.contains(p.sp) && tr.contains(p.tr) && lm.contains(p.lm);
-    }
-
-    public boolean overlaps(RelationEval p) {
-        return sp.overlaps(p.sp) && tr.overlaps(p.tr) && lm.overlaps(p.lm);
-    }
-
     @Override
     public boolean isEqual(SpRLEval b) {
         if (b == null)
@@ -114,6 +104,86 @@ public class RelationEval implements SpRLEval {
         if (!b.getClass().equals(getClass()))
             return false;
         RelationEval obj = (RelationEval) b;
-        return contains(obj);
+        return sp.isEqual(obj.sp) && tr.isEqual(obj.tr) && lm.isEqual(obj.lm);
+    }
+
+    @Override
+    public boolean overlaps(SpRLEval b) {
+        if (b == null)
+            return false;
+        if (!b.getClass().equals(getClass()))
+            return false;
+        RelationEval obj = (RelationEval) b;
+        return sp.overlaps(obj.sp) && tr.overlaps(obj.tr) && lm.overlaps(obj.lm);
+    }
+
+    @Override
+    public boolean contains(SpRLEval b) {
+        if (b == null)
+            return false;
+        if (!b.getClass().equals(getClass()))
+            return false;
+        RelationEval obj = (RelationEval) b;
+        return sp.contains(obj.sp) && tr.contains(obj.tr) && lm.contains(obj.lm);
+    }
+
+    @Override
+    public boolean isPartOf(SpRLEval b) {
+        if (b == null)
+            return false;
+        if (!b.getClass().equals(getClass()))
+            return false;
+        RelationEval obj = (RelationEval) b;
+        return sp.isPartOf(obj.sp) && tr.isPartOf(obj.tr) && lm.isPartOf(obj.lm);
+    }
+
+    @Override
+    public int hashCode() {
+        return (getHashCode(lm) + "-" + getHashCode(sp) + "-" + getHashCode(tr)).hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (obj.getClass() != getClass())
+            return false;
+        return hashCode() == obj.hashCode();
+    }
+
+    private int getHashCode(RoleEval r) {
+        return r == null ? new RoleEval().hashCode() : r.hashCode();
+    }
+
+    public String getGeneralType() {
+        return generalType;
+    }
+
+    public void setGeneralType(String generalType) {
+        this.generalType = generalType;
+    }
+
+    public String getSpecificType() {
+        return SpecificType;
+    }
+
+    public void setSpecificType(String specificType) {
+        SpecificType = specificType;
+    }
+
+    public String getRCC8() {
+        return RCC8;
+    }
+
+    public void setRCC8(String RCC8) {
+        this.RCC8 = RCC8;
+    }
+
+    public String getFoR() {
+        return FoR;
+    }
+
+    public void setFoR(String foR) {
+        FoR = foR;
     }
 }

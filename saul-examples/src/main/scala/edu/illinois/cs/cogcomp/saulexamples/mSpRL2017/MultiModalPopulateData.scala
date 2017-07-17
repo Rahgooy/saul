@@ -1,9 +1,10 @@
 package edu.illinois.cs.cogcomp.saulexamples.mSpRL2017
 
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.Helpers._
-import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel.{triplets, _}
 import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes._
-import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors.{documentToSentenceGenerating}
+import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors.documentToSentenceGenerating
+import mSpRLConfigurator._
 
 import scala.collection.JavaConversions._
 
@@ -12,14 +13,11 @@ import scala.collection.JavaConversions._
 
 object MultiModalPopulateData {
 
-  def populateRoleDataFromAnnotatedCorpus(
-                                           xmlReader: SpRLXmlReader,
-                                           imageReader: ImageReaderHelper,
-                                           isTrain: Boolean,
-                                           populateImages: Boolean = false,
-                                           populateNullPairs: Boolean = true
-                                         ): Unit = {
-    if (isTrain) {
+  lazy val xmlReader = new SpRLXmlReader(if (isTrain) trainFile else testFile)
+  lazy val imageReader = new ImageReaderHelper(imageDataPath, trainFile, testFile, isTrain)
+
+  def populateRoleDataFromAnnotatedCorpus(populateNullPairs: Boolean = true): Unit = {
+    if (isTrain && onTheFlyLexicon) {
       LexiconHelper.createSpatialIndicatorLexicon(xmlReader)
     }
     documents.populate(xmlReader.getDocuments, isTrain)
@@ -34,19 +32,15 @@ object MultiModalPopulateData {
 
     xmlReader.setRoles(phraseInstances)
 
-    if (populateImages) {
+    if(populateImages) {
       images.populate(imageReader.getImageList, isTrain)
       segments.populate(imageReader.getSegmentList, isTrain)
       segmentRelations.populate(imageReader.getImageRelationList, isTrain)
     }
   }
 
-  def populatePairDataFromAnnotatedCorpus(
-                                           xmlReader: SpRLXmlReader,
-                                           isTrain: Boolean,
-                                           indicatorClassifier: Phrase => Boolean,
-                                           populateImages: Boolean = false,
-                                           populateNullPairs: Boolean = true
+  def populatePairDataFromAnnotatedCorpus(indicatorClassifier: Phrase => Boolean,
+                                          populateNullPairs: Boolean = true
                                          ): Unit = {
 
     val phraseInstances = (if (isTrain) phrases.getTrainingInstances.toList else phrases.getTestingInstances.toList)
@@ -56,7 +50,24 @@ object MultiModalPopulateData {
     pairs.populate(candidateRelations, isTrain)
 
     val relations = if (isTrain) pairs.getTrainingInstances.toList else pairs.getTestingInstances.toList
-    xmlReader.setRelationTypes(relations, populateNullPairs)
+    xmlReader.setPairTypes(relations, populateNullPairs)
+  }
+
+  def populateTripletDataFromAnnotatedCorpus(
+                                              trClassifier: (Relation) => String,
+                                              spClassifier: (Phrase) => String,
+                                              lmClassifier: (Relation) => String
+                                            ): Unit = {
+
+    val candidateRelations = CandidateGenerator.generateTripletCandidates(
+      trClassifier,
+      spClassifier,
+      lmClassifier,
+      isTrain
+    )
+    triplets.populate(candidateRelations, isTrain)
+
+    xmlReader.setTripletRelationTypes(candidateRelations)
   }
 
   def populateDataFromPlainTextDocuments(documentList: List[Document],
@@ -70,7 +81,7 @@ object MultiModalPopulateData {
     if (populateNullPairs) {
       phrases.populate(List(dummyPhrase), isTrain)
     }
-    val candidateRelations = CandidateGenerator.generatePairCandidates(phrases.getTrainingInstances.toList, populateNullPairs, indicatorClassifier)
+    val candidateRelations = CandidateGenerator.generatePairCandidates(phrases().toList, populateNullPairs, indicatorClassifier)
     pairs.populate(candidateRelations, isTrain)
   }
 }

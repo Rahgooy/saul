@@ -2,11 +2,16 @@ package edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.Helpers
 
 import java.io.{FileOutputStream, PrintStream, PrintWriter}
 
+import edu.illinois.cs.cogcomp.core.utilities.XmlModel
 import edu.illinois.cs.cogcomp.saul.classifier.Results
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLClassifiers
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel.dummyPhrase
-import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes.{NlpBaseElement, Phrase, Relation, Token}
+import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes._
 import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.Eval._
+import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.SpRL2013.{LANDMARK, RELATION, SPATIALINDICATOR, TRAJECTOR}
+import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.SpRL2017.{Scene, SpRL2017Document}
+import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.SpRLAnnotation
+import org.h2.store.fs.FilePath
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
@@ -16,6 +21,137 @@ import scala.util.control.Breaks.{break, breakable}
   */
 object ReportHelper {
 
+  def saveEvalResultsFromXmlFile(actualFile: String, predictedFile: String, output: String):Unit = {
+
+    val stream = new FileOutputStream(output)
+    val xmlEvaluator = new XmlSpRLEvaluator(actualFile, predictedFile, new OverlapComparer)
+    val evaluator = new SpRLEvaluator
+
+    ReportHelper.saveEvalResults(stream, s"Roles", xmlEvaluator.evaluateRoles())
+
+    val relationsEval = xmlEvaluator.evaluateRelations()
+    val relEval = relationsEval.head
+    ReportHelper.saveEvalResults(stream, s"Relations", relationsEval)
+
+    ReportHelper.saveEvalResults(stream, "General Type", evaluator.evaluateRelationGeneralType(relEval))
+
+    ReportHelper.saveEvalResults(stream, "Specific Type", evaluator.evaluateRelationSpecificType(relEval))
+
+    ReportHelper.saveEvalResults(stream, "Specific Value", evaluator.evaluateRelationRCC8(relEval))
+
+    ReportHelper.saveEvalResults(stream, "FoR", evaluator.evaluateRelationFoR(relEval))
+
+    stream.close()
+  }
+
+  def saveAsXml(relations: List[Relation],
+                trajectors: List[Phrase],
+                indicators: List[Phrase],
+                landmarks: List[Phrase],
+                generalTypeClassifier: Relation => String,
+                specificTypeClassifier: Relation => String,
+                RCC8ValueClassifier: Relation => String,
+                FoRClassifier: Relation => String,
+                filePath: String): SpRL2017Document = {
+    val doc = new SpRL2017Document()
+    val trPerSentence = trajectors.filter(_ != dummyPhrase).groupBy(_.getSentence)
+    val lmPerSentence = landmarks.filter(_ != dummyPhrase).groupBy(_.getSentence)
+    val spPerSentence = indicators.filter(_ != dummyPhrase).groupBy(_.getSentence)
+    val relationPerSentence = relations.groupBy(_.getParent.asInstanceOf[Sentence])
+    val sentences = trPerSentence.keys.toSet.union(lmPerSentence.keys.toSet).union(spPerSentence.keys.toSet)
+      .union(relationPerSentence.keys.toSet).toList.sortBy(_.getId)
+    val sceneIds = sentences.map(_.getDocument.getId)
+    sentences.groupBy(_.getDocument.getId).foreach { case (sId, sentenceList) =>
+      val scene = new Scene()
+      scene.setDocNo(sId)
+      sentenceList.foreach(s => {
+        val sent = new edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.SpRL2017.Sentence()
+        sent.setStart(s.getStart)
+        sent.setEnd(s.getEnd)
+        sent.setText(s.getText)
+        sent.setId(s.getId)
+
+        val rel = if (relationPerSentence.containsKey(s)) relationPerSentence(s) else List()
+
+        val tr = (if (trPerSentence.containsKey(s)) trPerSentence(s) else List()).toSet
+          .union(rel.map(_.getArgument(0).asInstanceOf[Phrase]).toSet)
+          .map(x => setXmlRoleValues(s, x, new TRAJECTOR)).toList.sortBy(_.getStart)
+
+        val sp = (if (spPerSentence.containsKey(s)) spPerSentence(s) else List()).toSet
+          .union(rel.map(_.getArgument(1).asInstanceOf[Phrase]).toSet)
+          .map(x => setXmlRoleValues(s, x, new SPATIALINDICATOR)).toList.sortBy(_.getStart)
+
+        val lm = (if (lmPerSentence.containsKey(s)) lmPerSentence(s) else List()).toSet
+          .union(rel.map(_.getArgument(2).asInstanceOf[Phrase]).toSet)
+          .map(x => setXmlRoleValues(s, x, new LANDMARK)).toList
+          .sortBy(_.getStart)
+
+        sent.setTrajectors(tr)
+        sent.setLandmarks(lm)
+        sent.setSpatialindicators(sp)
+        sent.setRelations(getXmlRelations(rel, generalTypeClassifier, specificTypeClassifier, RCC8ValueClassifier, FoRClassifier))
+        scene.getSentences.add(sent)
+      })
+      doc.getScenes.add(scene)
+    }
+    XmlModel.write(doc, filePath)
+    doc
+  }
+
+  private def getXmlRelations(
+                               rel: List[Relation],
+                               generalTypeClassifier: Relation => String,
+                               specificTypeClassifier: Relation => String,
+                               RCC8ValueClassifier: Relation => String,
+                               FoRClassifier: Relation => String
+                             ): List[RELATION] = {
+    rel.map(x => {
+      val r = new RELATION
+      //r.setId(x.getId)
+      r.setTrajectorId("T_" + getArgId(x, 0))
+      r.setSpatialIndicatorId("SP_" + getArgId(x, 1))
+      r.setLandmarkId("L_" + getArgId(x, 2))
+      r.setGeneralType(generalTypeClassifier(x))
+      r.setSpecificType(specificTypeClassifier(x))
+      r.setRCC8Value(RCC8ValueClassifier(x))
+      r.setFoR(FoRClassifier(x))
+      r
+    })
+  }
+
+  private def getArgId(x: Relation, arg: Int) = {
+    if (x.getArgumentId(arg) == dummyPhrase.getId)
+      x.getParent.asInstanceOf[Sentence].getId + "_null" else x.getArgumentId(arg)
+  }
+
+  private def setXmlRoleValues[T <: SpRLAnnotation](s: Sentence, x: Phrase, t: T): T = {
+    val prefix = t match {
+      case _: TRAJECTOR => "T_"
+      case _: LANDMARK => "L_"
+      case _: SPATIALINDICATOR => "SP_"
+    }
+    if (x == dummyPhrase) {
+      t.setId(prefix + s.getId + "_null")
+      t.setStart(-1)
+      t.setEnd(-1)
+      return t
+    }
+    t.setStart(x.getStart)
+    t.setEnd(x.getEnd)
+    t.setText(x.getText)
+    t.setId(prefix + x.getId)
+    t
+  }
+
+  def reportTripletResults(
+                             actualFile: String,
+                             resultsDir: String,
+                             resultFilePrefix: String,
+                             predicted: List[Relation]
+                           )={
+    val actual = new SpRLXmlReader(actualFile).getTripletsWithArguments()
+    reportRelationResults(resultsDir, resultFilePrefix, actual, predicted, new OverlapComparer, 3)
+  }
   def reportRelationResults(
                              resultsDir: String,
                              resultFilePrefix: String,
@@ -83,7 +219,7 @@ object ReportHelper {
     val actualEval = new RelationsEvalDocument(actual.map(_._2))
     val predictedEval = new RelationsEvalDocument(predicted.map(_._2))
     val results = evaluator.evaluateRelations(actualEval, predictedEval, comparer)
-    evaluator.printEvaluation(results)
+    SpRLEvaluator.printEvaluation(results)
     results
   }
 
@@ -92,7 +228,7 @@ object ReportHelper {
     def getArg(i: Int, r: Relation) = r.getArgument(i).getText.toLowerCase
 
     def print(r: Relation) = {
-      MultiModalSpRLClassifiers.relationFeatures(FeatureSets.BaseLine)
+      MultiModalSpRLClassifiers.pairFeatures(FeatureSets.BaseLine)
         .map(prop => printVal(prop(r))).mkString(" | ")
     }
 
@@ -118,7 +254,7 @@ object ReportHelper {
     writer.println("===========================================================================")
     writer.println(s" ${caption}")
     writer.println("---------------------------------------------------------------------------")
-    SpRLEvaluator.printEvaluation(stream, results)
+    SpRLEvaluator.printEvaluation(stream, results.filterNot(x => x.getLabel.equalsIgnoreCase("none")))
     writer.println()
   }
 
@@ -161,9 +297,15 @@ object ReportHelper {
   }
 
   private def convertToEval(r: Results): Seq[SpRLEvaluation] = r.perLabel
-    .map(x => new SpRLEvaluation(x.label, x.precision * 100, x.recall * 100, x.f1 * 100, x.labeledSize, x.predictedSize))
+    .map(x => {
+      val p = if (x.predictedSize == 0) 1.0 else x.precision
+      val r = if (x.labeledSize == 0) 1.0 else x.recall
+      val f1 = if (x.predictedSize == 0) if (x.labeledSize == 0) 1.0 else 0.0 else x.f1
+      val result = new SpRLEvaluation(x.label, p * 100, r * 100, f1 * 100, x.labeledSize, x.predictedSize)
+      result
+    })
 
-  private def getRelationEval(r: Relation): RelationEval = {
+  def getRelationEval(r: Relation): RelationEval = {
     val tr = r.getArgument(0)
     val sp = r.getArgument(1)
     val lm = r.getArgument(2)
