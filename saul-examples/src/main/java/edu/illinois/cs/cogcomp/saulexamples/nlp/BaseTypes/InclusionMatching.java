@@ -12,7 +12,7 @@ package edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes;
 public class InclusionMatching implements ISpanElementMatching {
 
     @Override
-    public boolean matches(ISpanElement xmlElement, ISpanElement element) {
-        return xmlElement.contains(element);
+    public boolean matches(ISpanElement e1, ISpanElement e2) {
+        return e1.contains(e2);
     }
 }
