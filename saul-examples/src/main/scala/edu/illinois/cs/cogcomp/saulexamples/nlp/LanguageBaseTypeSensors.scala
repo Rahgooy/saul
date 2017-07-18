@@ -8,10 +8,10 @@ package edu.illinois.cs.cogcomp.saulexamples.nlp
 
 import java.util.Properties
 
-import edu.illinois.cs.cogcomp.core.datastructures.{ViewNames, _}
-import edu.illinois.cs.cogcomp.core.datastructures.textannotation.{Relation => _, Sentence => _, _}
+import edu.illinois.cs.cogcomp.core.datastructures.{ ViewNames, _ }
+import edu.illinois.cs.cogcomp.core.datastructures.textannotation.{ Relation => _, Sentence => _, _ }
 import edu.illinois.cs.cogcomp.edison.features.FeatureUtilities
-import edu.illinois.cs.cogcomp.edison.features.factory.{SubcategorizationFrame, WordFeatureExtractorFactory}
+import edu.illinois.cs.cogcomp.edison.features.factory.{ SubcategorizationFrame, WordFeatureExtractorFactory }
 import edu.illinois.cs.cogcomp.edison.features.helpers.PathFeatureHelper
 import edu.illinois.cs.cogcomp.nlp.common.PipelineConfigurator._
 import edu.illinois.cs.cogcomp.nlp.utilities.CollinsHeadFinder
@@ -116,7 +116,7 @@ object LanguageBaseTypeSensors extends Logging {
 
   def getTokens(text: String): List[Token] = {
     val ta = TextAnnotationFactory.createTextAnnotation(as, "", "", text)
-    ta.getView(ViewNames.TOKENS).getConstituents.asScala.map(x=>
+    ta.getView(ViewNames.TOKENS).getConstituents.asScala.map(x =>
       new Token(null.asInstanceOf[Sentence], null, x.getStartCharOffset, x.getEndCharOffset, x.toString)).toList
   }
 
@@ -158,13 +158,13 @@ object LanguageBaseTypeSensors extends Logging {
       crossProduct(argumentInstances.seq.toList)
         // don't consider elements that are from different parents(sentences)
         .filter(args => args.filter(_ != null).groupBy {
-        case x: Token => x.getSentence.getId
-        case x: Phrase => x.getSentence.getId
-        case x: Sentence => x.getDocument.getId
-        case _ => null
-      }.size <= 1 && args.filter(_ != null)
-        .groupBy(_.getId).size == args.count(_ != null) // distinct arguments
-      )
+          case x: Token => x.getSentence.getId
+          case x: Phrase => x.getSentence.getId
+          case x: Sentence => x.getDocument.getId
+          case _ => null
+        }.size <= 1 && args.filter(_ != null)
+          .groupBy(_.getId).size == args.count(_ != null) // distinct arguments
+          )
         .map(args => {
           val r = new Relation()
           args.zipWithIndex.filter(x => x._1 != null).foreach {
@@ -245,7 +245,6 @@ object LanguageBaseTypeSensors extends Logging {
 
     path.toString.toUpperCase
   }
-
 
   ////////////////////////////////////////////////////////////////////////////
   /// private methods
