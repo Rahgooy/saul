@@ -6,14 +6,12 @@
   */
 package edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling;
 
-import java.math.BigInteger;
-
 /**
  * Created by taher on 7/30/16.
  */
 public interface SpRLAnnotation {
-    BigInteger getStart();
-    BigInteger getEnd();
+    Integer getStart();
+    Integer getEnd();
     String getText();
     String getId();
 }
