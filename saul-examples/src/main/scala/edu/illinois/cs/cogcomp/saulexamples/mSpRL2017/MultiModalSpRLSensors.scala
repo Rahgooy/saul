@@ -60,6 +60,10 @@ object MultiModalSpRLSensors {
     i.getId == s.getAssociatedImageID
   }
 
+  def imageToRelationsMatching(i: Image, r: SegmentRelation): Boolean = {
+    i.getId == r.getImageId
+  }
+
   def segmentRelationToSegmentMatching(r: SegmentRelation, s: Segment): Boolean = {
     (r.getFirstSegmentId == s.getSegmentId || r.getSecondSegmentId == s.getSegmentId) && (r.getImageId == s.getAssociatedImageID)
   }

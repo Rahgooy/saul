@@ -47,6 +47,7 @@ public class CLEFImageReader {
     public List<SegmentRelation> testRelations;
 
     private Hashtable<Integer, String> MapCode2Concept = new Hashtable<Integer, String>();
+    private Hashtable<String, String> segmentReferitText = new Hashtable<String, String>();
     private Hashtable<String, String> segmentOntology = new Hashtable<String, String>();
     private Hashtable<String, String> redefindedRelations = new Hashtable<String, String>();
 
@@ -85,6 +86,8 @@ public class CLEFImageReader {
         getRedefinedRelations(directory);
         // Load Concepts
         getConcepts(directory);
+        //Load Referit Data
+        getReferitText(directory);
         // Load Training
         getTrainingImages();
         // Load Testing
@@ -141,6 +144,24 @@ public class CLEFImageReader {
         }
     }
 
+    /*******************************************************/
+    // Loading Referit Text for CLEF Segments
+    // Storing information in HashTable for quick retrieval
+
+    /*******************************************************/
+    private void getReferitText(String directory) throws IOException {
+        String file = directory + "/ReferGames.txt";
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] segReferitText = line.split("\\~");
+            if (segReferitText.length > 1) {
+                segmentReferitText.put(segReferitText[0], segReferitText[1]);
+            } else {
+                segmentReferitText.put(segReferitText[0], " ");
+            }
+        }
+    }
     private void getRedefinedRelations(String directory) throws IOException {
         directory = directory + "/relations";
         File d = new File(directory);
@@ -260,13 +281,27 @@ public class CLEFImageReader {
                             ontologyConcepts.add(o);
                     }
 
+                    List<String> referitText = new ArrayList<>();
+                    String referitKey = imageId + "_" + segmentId + ".jpg";
+                    String text = segmentReferitText.get(referitKey);
+
+                    if(text!=null) {
+                        String[] referit = text.split(" ");
+                        for (int i = 0; i < referit.length; i++) {
+                            String r = referit[i].trim();
+                            referitText.add(r);
+                        }
+                    }
+                    else
+                        referitText.add(" ");
+
                     if (segmentConcept != null) {
                         String segmentFeatures = segmentInfo[2];
                         segmentFeatures = segmentFeatures.trim().replaceAll(" +", " ");
                         if (trainingData.contains(imageId)) {
-                            trainingSegments.add(new Segment(imageId, segmentId, segmentCode, segmentFeatures, segmentConcept, ontologyConcepts));
+                            trainingSegments.add(new Segment(imageId, segmentId, segmentCode, segmentFeatures, segmentConcept, ontologyConcepts, referitText));
                         } else if (testData.contains(imageId)) {
-                            testSegments.add(new Segment(imageId, segmentId, segmentCode, segmentFeatures, segmentConcept, ontologyConcepts));
+                            testSegments.add(new Segment(imageId, segmentId, segmentCode, segmentFeatures, segmentConcept, ontologyConcepts, referitText));
                         }
                     }
                 }
@@ -493,7 +528,7 @@ public class CLEFImageReader {
             String path = "data/mSpRL/results/imagetrain/" + i.getId() + ".txt";
             printWriterTest = new PrintWriter(path);
             for (SegmentRelation sr : trainingRelations) {
-                if (i.getId().equals(sr.getImageId()) && (sr.getRelation().equals("x-aligned") || sr.getRelation().equals("y-aligned")))
+                if (i.getId().equals(sr.getImageId())) //&& (sr.getRelation().equals("x-aligned") || sr.getRelation().equals("y-aligned")))
                     printWriterTest.println(sr.getFirstSegmentId() + "," + sr.getSecondSegmentId() + "," + sr.getRelation() + "," + getTrainSegmentConcept(sr.getImageId(), sr.getFirstSegmentId()) + "," + getTrainSegmentConcept(sr.getImageId(), sr.getSecondSegmentId()));
             }
             printWriterTest.close();

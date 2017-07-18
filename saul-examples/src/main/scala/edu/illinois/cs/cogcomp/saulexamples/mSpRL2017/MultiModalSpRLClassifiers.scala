@@ -49,7 +49,7 @@ object MultiModalSpRLClassifiers {
   def tripletFeatures: List[Property[Relation]] = tripletFeatures(featureSet)
 
   def tripletFeatures(featureSet: FeatureSets): List[Property[Relation]] =
-    List(tripletWordForm, tripletHeadWordForm, tripletPos, tripletHeadWordPos, tripletPhrasePos,
+    List(tripletWordForm, tripletHeadWordForm, tripletPos, tripletHeadWordPos, tripletPhrasePos, tripletVisionMapping,
       tripletSemanticRole, tripletDependencyRelation, tripletSubCategorization, tripletSpatialContext, tripletHeadSpatialContext) ++
       (featureSet match {
         case FeatureSets.BaseLineWithImage => List()
@@ -58,12 +58,12 @@ object MultiModalSpRLClassifiers {
         case _ => List[Property[Relation]]()
       })
 
-  object ImageSVMClassifier extends Learnable(segments) {
-    def label = segmentLabel
+  object ImageSVMClassifier extends Learnable(images) {
+    def label = imageLabel
 
     override lazy val classifier = new SupportVectorMachine()
 
-    override def feature = using(segmentFeatures)
+    override def feature = using(imageRelations)
   }
 
   object ImageClassifierWeka extends Learnable(segments) {

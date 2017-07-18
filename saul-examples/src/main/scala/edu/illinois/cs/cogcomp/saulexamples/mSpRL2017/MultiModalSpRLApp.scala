@@ -172,9 +172,7 @@ object MultiModalSpRLApp extends App with Logging {
         x => TripletFoRClassifier(x),
         s"$resultsDir/${expName}${suffix}.xml")
     }
-
     ReportHelper.saveEvalResultsFromXmlFile(testFile, s"$resultsDir/${expName}${suffix}.xml", s"$resultsDir/$expName$suffix.txt")
   }
-
 }
 

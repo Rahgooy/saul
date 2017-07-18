@@ -15,7 +15,7 @@ object mSpRLConfigurator {
   val testFile = "data/mSprl/saiapr_tc-12/newSpRL2017_gold.xml"
   val suffix = ""
   val model = FeatureSets.WordEmbeddingPlusImage
-  val isTrain = false
+  val isTrain = true
   val jointTrain = false
   val skipIndividualClassifiersTraining = false  /* When using joint train, it will ignore individual classifiers
                                                   * training and loads them from the disk*/

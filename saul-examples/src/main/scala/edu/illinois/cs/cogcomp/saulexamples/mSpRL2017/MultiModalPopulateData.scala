@@ -67,6 +67,7 @@ object MultiModalPopulateData {
     )
     triplets.populate(candidateRelations, isTrain)
 
+
     xmlReader.setTripletRelationTypes(candidateRelations)
   }
 
