@@ -16,7 +16,7 @@ import scala.collection.JavaConversions._
   */
 object MultiModalSpRLDataModel extends DataModel {
 
-  val writer = new WriteToFile("Relation-Mapping-Referit.txt");
+  val writer = new WriteToFile("GroundTruthTriplets.txt");
   var matchingcount = 0
   var total = 0
   val dummyPhrase = new Phrase()
@@ -40,6 +40,7 @@ object MultiModalSpRLDataModel extends DataModel {
   val images = node[Image]
   val segments = node[Segment]
   val segmentRelations = node[SegmentRelation]
+
 
   /*
   Edges
@@ -465,7 +466,13 @@ object MultiModalSpRLDataModel extends DataModel {
       phrasePos(first) + "::" + phrasePos(second) + "::" + phrasePos(third)
   }
 
-  val tripletVisionMapping = property(triplets, cache = true) {
+  val tripletDummyDummy = property(triplets) {
+    r: Relation =>
+      val (first, second, third) = getTripletArguments(r)
+      (headWordFrom(second)).toString
+  }
+
+  val tripletVisionMapping = property(triplets) {
     r: Relation =>
       if(getSegmentRelations(r)) {
         matchingcount += 1

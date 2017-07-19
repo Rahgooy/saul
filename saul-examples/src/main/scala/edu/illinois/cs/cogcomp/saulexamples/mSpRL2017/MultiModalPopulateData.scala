@@ -53,6 +53,14 @@ object MultiModalPopulateData {
     xmlReader.setPairTypes(relations, populateNullPairs)
   }
 
+  def populateTripletGroundTruth() {
+    val groundTruthTriplets = if(isTrain) new SpRLXmlReader(trainFile).getTripletsWithArguments() else new SpRLXmlReader(testFile).getTripletsWithArguments()
+
+    triplets.populate(groundTruthTriplets, isTrain)
+
+    xmlReader.setTripletRelationTypes(groundTruthTriplets)
+
+  }
   def populateTripletDataFromAnnotatedCorpus(
                                               trClassifier: (Relation) => String,
                                               spClassifier: (Phrase) => String,
