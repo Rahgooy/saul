@@ -466,24 +466,21 @@ object MultiModalSpRLDataModel extends DataModel {
       phrasePos(first) + "::" + phrasePos(second) + "::" + phrasePos(third)
   }
 
-  val tripletDummyDummy = property(triplets) {
-    r: Relation =>
-      val (first, second, third) = getTripletArguments(r)
-      (headWordFrom(second)).toString
-  }
-
   val tripletVisionMapping = property(triplets) {
     r: Relation =>
       if(getSegmentRelations(r)) {
         matchingcount += 1
         total += 1;
         writer.WriteTextln(total.toString)
+        println(total.toString)
         writer.WriteTextln(matchingcount.toString)
+        println(matchingcount.toString)
         true
       }
       else {
         total += 1;
         writer.WriteTextln(total.toString)
+        println(total.toString)
         false
       }
   }
@@ -581,7 +578,15 @@ object MultiModalSpRLDataModel extends DataModel {
   }
 
   private def getTripletArguments(r: Relation): (Phrase, Phrase, Phrase) = {
-    ((triplets(r) ~> tripletToFirstArg).head, (triplets(r) ~> tripletToSecondArg).head, (triplets(r) ~> tripletToThirdArg).head)
+
+      val first = (triplets(r) ~> tripletToFirstArg).head
+      val secondLink = (triplets(r) ~> tripletToSecondArg)
+      var second = dummyPhrase
+      if(secondLink.nonEmpty) {
+        second = secondLink.head
+      }
+      val third= (triplets(r) ~> tripletToThirdArg).head
+    (first, second, third)
   }
 
   private def getPairArguments(r: Relation): (Phrase, Phrase) = {
@@ -653,73 +658,81 @@ object MultiModalSpRLDataModel extends DataModel {
   }
   private def getSegmentRelations(r: Relation) = {
     val (first, second, third) = getTripletArguments(r)
-    val firstConcept = headWordFrom(first)
-    val thirdConcept = headWordFrom(third)
     var found = false
-    val img = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage
-    val segs = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment
-    val rels = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment ~> -segmentRelationsToSegments
+    if(second.getId!=dummyPhrase.getId) {
+      val firstConcept = headWordFrom(first)
+      val thirdConcept = headWordFrom(third)
+      val img = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage
+      val segs = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment
+      val rels = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment ~> -segmentRelationsToSegments
 
-    writer.WriteTextln("************************************")
-    writer.WriteTextln(firstConcept + "," + second + "," + thirdConcept)
-    writer.WriteTextln("------------------------------------")
+      println("************************************")
+      println(firstConcept + "," + second + "," + thirdConcept)
+      println("------------------------------------")
 
-    for(ir <- rels) {
-      var firstsegConcept = ""
-      var firstsegOntology : List[String] = Nil
-      var firstsegReferit : List[String] = Nil
-      var secondsegConcept = ""
-      var secondsegOntology : List[String] = Nil
-      var secondsegReferit : List[String] = Nil
+      writer.WriteTextln("************************************")
+      writer.WriteTextln(firstConcept + "," + second + "," + thirdConcept)
+      writer.WriteTextln("------------------------------------")
 
-      var firstsegMatch = false
-      var secondsegMatch = false
-      val imageRelation = ir.getRelation
-      for(s <- segs) {
-        if(s.getSegmentId == ir.getFirstSegmentId) {
-          firstsegConcept = s.getSegmentConcept
-          firstsegOntology = s.ontologyConcepts.toList
-          firstsegReferit = s.referitText.toList
+      for(ir <- rels) {
+        var firstsegConcept = ""
+        var firstsegOntology : List[String] = Nil
+        var firstsegReferit : List[String] = Nil
+        var secondsegConcept = ""
+        var secondsegOntology : List[String] = Nil
+        var secondsegReferit : List[String] = Nil
+
+        var firstsegMatch = false
+        var secondsegMatch = false
+        val imageRelation = ir.getRelation
+        for(s <- segs) {
+          if(s.getSegmentId == ir.getFirstSegmentId) {
+            firstsegConcept = s.getSegmentConcept
+            firstsegOntology = s.ontologyConcepts.toList
+            firstsegReferit = s.referitText.toList
+          }
+          if(s.getSegmentId == ir.getSecondSegmentId) {
+            secondsegConcept = s.getSegmentConcept
+            secondsegOntology = s.ontologyConcepts.toList
+            secondsegReferit = s.referitText.toList
+          }
         }
-        if(s.getSegmentId == ir.getSecondSegmentId) {
-          secondsegConcept = s.getSegmentConcept
-          secondsegOntology = s.ontologyConcepts.toList
-          secondsegReferit = s.referitText.toList
-        }
-      }
 
-      firstsegMatch = getImageConceptMatching(firstsegConcept, firstConcept)
-      if(!firstsegMatch) {
-        firstsegMatch = getOntologyConceptMatching(firstConcept, firstsegOntology)
-      if(!firstsegMatch)
-        firstsegMatch = getReferitConceptMatching(firstConcept, firstsegOntology)
-      }
-      secondsegMatch = getImageConceptMatching(secondsegConcept, thirdConcept)
-      if(!secondsegMatch) {
-        secondsegMatch = getOntologyConceptMatching(thirdConcept, secondsegOntology)
-        if(!secondsegMatch)
-          secondsegMatch = getReferitConceptMatching(thirdConcept, secondsegReferit)
-      }
-      if(firstsegMatch && secondsegMatch) {
-        writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
-        found = true
-      }
-      else {
-        firstsegMatch = getImageConceptMatching(firstsegConcept, thirdConcept)
+        firstsegMatch = getImageConceptMatching(firstsegConcept, firstConcept)
         if(!firstsegMatch) {
-          firstsegMatch = getOntologyConceptMatching(thirdConcept, firstsegOntology)
-          if(!firstsegMatch)
-            firstsegMatch = getReferitConceptMatching(thirdConcept, firstsegOntology)
+          firstsegMatch = getOntologyConceptMatching(firstConcept, firstsegOntology)
+        if(!firstsegMatch)
+          firstsegMatch = getReferitConceptMatching(firstConcept, firstsegOntology)
         }
-        secondsegMatch = getImageConceptMatching(secondsegConcept, firstConcept)
+        secondsegMatch = getImageConceptMatching(secondsegConcept, thirdConcept)
         if(!secondsegMatch) {
-          secondsegMatch = getOntologyConceptMatching(firstConcept, secondsegOntology)
+          secondsegMatch = getOntologyConceptMatching(thirdConcept, secondsegOntology)
           if(!secondsegMatch)
-            secondsegMatch = getReferitConceptMatching(firstConcept, secondsegReferit)
+            secondsegMatch = getReferitConceptMatching(thirdConcept, secondsegReferit)
         }
         if(firstsegMatch && secondsegMatch) {
+          println(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
           writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
           found = true
+        }
+        else {
+          firstsegMatch = getImageConceptMatching(firstsegConcept, thirdConcept)
+          if(!firstsegMatch) {
+            firstsegMatch = getOntologyConceptMatching(thirdConcept, firstsegOntology)
+            if(!firstsegMatch)
+              firstsegMatch = getReferitConceptMatching(thirdConcept, firstsegOntology)
+          }
+          secondsegMatch = getImageConceptMatching(secondsegConcept, firstConcept)
+          if(!secondsegMatch) {
+            secondsegMatch = getOntologyConceptMatching(firstConcept, secondsegOntology)
+            if(!secondsegMatch)
+              secondsegMatch = getReferitConceptMatching(firstConcept, secondsegReferit)
+          }
+          if(firstsegMatch && secondsegMatch) {
+            println(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
+            writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
+            found = true
+          }
         }
       }
     }

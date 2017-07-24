@@ -83,7 +83,7 @@ public class CLEFImageReader {
 
         path = directory;
         // Load redefined segment relations
-        getRedefinedRelations(directory);
+//        getRedefinedRelations(directory);
         // Load Concepts
         getConcepts(directory);
         //Load Referit Data
@@ -346,9 +346,9 @@ public class CLEFImageReader {
                                 if (val == 1)
                                     rel = "adjacent";
                                 else if (val == 2)
-                                    rel = null;
+                                    //rel = null;
                                     // Ignoring disjoint relations
-                                    // rel = "disjoint";
+                                    rel = "disjoint";
                                 else
                                     rel = null;
 
@@ -365,8 +365,9 @@ public class CLEFImageReader {
                                     rel = "beside";
                                 else if (val == 4) {
                                     // Original "x-aligned"
-                                    String key = imgId + "-" + firstSegmentId + "-" + secondSegmentId + "-" + "x-aligned";
-                                    rel = redefindedRelations.get(key);
+                                    rel = "x-aligned";
+                                    //String key = imgId + "-" + firstSegmentId + "-" + secondSegmentId + "-" + "x-aligned";
+                                    //rel = redefindedRelations.get(key);
                                 }
 
                                 if (rel != null) {
@@ -380,17 +381,18 @@ public class CLEFImageReader {
 
                                 val = (int) yRels[x][y];
                                 if (val == 5)
-                                    rel = null;
+                                    //rel = null;
                                     // Ignoring above relations
-                                    // rel = "above";
+                                    rel = "above";
                                 else if (val == 6)
-                                    rel = null;
+                                    //rel = null;
                                     // Ignoring below relations
-                                    //rel = "below";
+                                    rel = "below";
                                 else if (val == 7) {
                                     // Original "y-aligned"
-                                    String key = imgId + "-" + firstSegmentId + "-" + secondSegmentId + "-" + "x-aligned";
-                                    rel = redefindedRelations.get(key);
+                                    rel= "y-aligned";
+                                    //String key = imgId + "-" + firstSegmentId + "-" + secondSegmentId + "-" + "x-aligned";
+                                    //rel = redefindedRelations.get(key);
                                 }
 
                                 if (rel != null) {

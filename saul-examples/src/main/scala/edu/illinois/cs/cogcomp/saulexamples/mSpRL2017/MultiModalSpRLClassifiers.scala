@@ -58,12 +58,12 @@ object MultiModalSpRLClassifiers {
         case _ => List[Property[Relation]]()
       })
 
-  object ImageSVMClassifier extends Learnable(triplets) {
-    def label = tripletDummyDummy
+  object ImageSVMClassifier extends Learnable(segments) {
+    def label = segmentLabel
 
     override lazy val classifier = new SupportVectorMachine()
 
-    override def feature = using(tripletVisionMapping)
+    override def feature = using(segmentFeatures)
   }
 
   object ImageClassifierWeka extends Learnable(segments) {

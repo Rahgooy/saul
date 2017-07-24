@@ -1,7 +1,7 @@
 package edu.illinois.cs.cogcomp.saulexamples.mSpRL2017
 
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.Helpers._
-import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel.{triplets, _}
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
 import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes._
 import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors.documentToSentenceGenerating
 import mSpRLConfigurator._
@@ -53,9 +53,66 @@ object MultiModalPopulateData {
     xmlReader.setPairTypes(relations, populateNullPairs)
   }
 
+  def partof(l1: String, l2: String): Boolean = {
+    var found = false
+    for(f <- l1.split(" ")) {
+      for(s <- l2.split(" ")) {
+        if(f==s) {
+          found = true
+        }
+      }
+    }
+    found
+  }
   def populateTripletGroundTruth() {
     val groundTruthTriplets = if(isTrain) new SpRLXmlReader(trainFile).getTripletsWithArguments() else new SpRLXmlReader(testFile).getTripletsWithArguments()
 
+    val instances = if (isTrain) phrases.getTrainingInstances else phrases.getTestingInstances
+
+
+    groundTruthTriplets.foreach(t => {
+      var fullID = ""
+      val gsen = t.getParent.getId
+      val tra = instances.filter(i => {
+        val sen = phrases(i) <~ sentenceToPhrase
+        ((i.getText.trim == t.getArgument(0).getText.trim ||
+          partof(i.getText.trim, t.getArgument(0).getText.trim))
+          && gsen == sen.head.getId)
+      })
+      if (tra.nonEmpty) {
+        t.setArgumentId(0, tra.head.getId)
+        fullID = tra.head.getId
+      }
+      val sp = instances.filter(i => {
+        val sen = phrases(i) <~ sentenceToPhrase
+        ((i.getText.trim == t.getArgument(1).getText.trim ||
+          partof(i.getText.trim, t.getArgument(1).getText.trim))
+          && gsen == sen.head.getId)
+      })
+      if(sp.nonEmpty) {
+        t.setArgumentId(1, sp.head.getId)
+        fullID = fullID + "_" + sp.head.getId
+      }
+      val lm = instances.filter(i => {
+        val sen = phrases(i) <~ sentenceToPhrase
+        var lmText = t.getArgument(2).getText
+        if(lmText!=null)
+          ((i.getText.trim == lmText.trim ||
+            partof(i.getText.trim, t.getArgument(2).getText.trim))
+            && gsen == sen.head.getId)
+        else
+          false
+      })
+      if(lm.nonEmpty) {
+        t.setArgumentId(2, lm.head.getId)
+        fullID = fullID + "_" + lm.head.getId
+      }
+      else {
+        t.setArgumentId(2, dummyPhrase.getId)
+        fullID = fullID + "_" + dummyPhrase.getId
+      }
+      t.setId(fullID)
+    })
     triplets.populate(groundTruthTriplets, isTrain)
 
     xmlReader.setTripletRelationTypes(groundTruthTriplets)

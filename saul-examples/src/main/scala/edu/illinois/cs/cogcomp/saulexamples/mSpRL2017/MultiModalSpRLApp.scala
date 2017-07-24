@@ -92,11 +92,12 @@ object MultiModalSpRLApp extends App with Logging {
     TrajectorPairClassifier.save()
     LandmarkPairClassifier.save()
 
-    populateTripletDataFromAnnotatedCorpus(
+/*    populateTripletDataFromAnnotatedCorpus(
       x => TrajectorPairClassifier(x),
       x => IndicatorRoleClassifier(x),
       x => LandmarkPairClassifier(x)
-    )
+    )*/
+    populateTripletGroundTruth()
 
     val goldTriplets = triplets.getTrainingInstances.filter(_.containsProperty("ActualId"))
     TripletGeneralTypeClassifier.learn(iterations, goldTriplets)
