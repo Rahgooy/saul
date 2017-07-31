@@ -109,8 +109,14 @@ class SpRLXmlReader(dataPath: String) {
       val sp = indicators(r.getArgumentId(1))
       val lm = landmarks(r.getArgumentId(2))
       r.setArgument(0, tr)
+      r.setArgumentId(0, r.getArgument(0).getId)
       r.setArgument(1, sp)
+      r.setArgumentId(1, r.getArgument(1).getId)
       r.setArgument(2, lm)
+      r.setArgumentId(2, r.getArgument(2).getId)
+      //set relation parent
+      r.setParent(sp.getSentence)
+      r.setId(r.getArgumentId(0) + "_" + r.getArgumentId(1) + "_" + r.getArgumentId(2))
       r
     }).toList
   }

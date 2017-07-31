@@ -19,10 +19,11 @@ public class Segment {
     private String segmentFeatures;
     private String segmentConcept;
     private String imageId;
-    private List<String> ontologyConcepts= new ArrayList<>();
+    public List<String> ontologyConcepts= new ArrayList<>();
+    public List<String> referitText= new ArrayList<>();
     public double[] features;
 
-    public Segment(String ImageId, int segmentId, int segmentCode, String segmentFeatures, String segmentConcept, List<String> ontologyConcepts)
+    public Segment(String ImageId, int segmentId, int segmentCode, String segmentFeatures, String segmentConcept, List<String> ontologyConcepts, List<String> referitText)
     {
         this.imageId = ImageId;
         this.segmentId = segmentId;
@@ -30,6 +31,7 @@ public class Segment {
         this.segmentFeatures = segmentFeatures;
         this.segmentConcept = segmentConcept;
         this.ontologyConcepts = ontologyConcepts;
+        this.referitText = referitText;
     }
 
     public String getAssociatedImageID()
@@ -57,9 +59,13 @@ public class Segment {
         return segmentConcept;
     }
 
-    public List<String> getOntologyConcepts()
+    public boolean isexistOntologyConcepts(String x)
     {
-        return ontologyConcepts;
+        for(String o : ontologyConcepts) {
+            if(x.contains(o.toLowerCase()))
+                return true;
+        }
+        return false;
     }
 
     @Override

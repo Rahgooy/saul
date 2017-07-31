@@ -1,38 +1,36 @@
 package edu.illinois.cs.cogcomp.saulexamples.mSpRL2017
 
-import edu.illinois.cs.cogcomp.saulexamples.data.CLEFImageReader
-import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLClassifiers.{ ImageClassifierWeka, ImageSVMClassifier }
-import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
+import java.io.File
 
-import scala.collection.JavaConversions._
+import edu.illinois.cs.cogcomp.saulexamples.data.{CLEFImageReader, WriteToFile}
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.Helpers.ImageReaderHelper
+import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes.{Phrase, Sentence}
+import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors._
 
-/** Created by Taher on 2017-02-20.
+/** Created by Umar Manzoor on 29/12/2016.
   */
+
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalPopulateData._
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.mSpRLConfigurator._
 object ImageApp extends App {
 
-  val readFullData = false
-  val CLEFDataset = new CLEFImageReader("data/mSprl/saiapr_tc-12", "newSprl2017_train", "newSprl2017_gold", readFullData)
+  lazy val imageReader = new ImageReaderHelper(imageDataPath, trainFile, testFile, isTrain)
+  images.populate(imageReader.getImageList, isTrain)
+  segments.populate(imageReader.getSegmentList, isTrain)
+  segmentRelations.populate(imageReader.getImageRelationList, isTrain)
 
-  val imageListTrain = CLEFDataset.trainingImages
-  val segmentListTrain = CLEFDataset.trainingSegments
-  val relationListTrain = CLEFDataset.trainingRelations
+  populateRoleDataFromAnnotatedCorpus()
 
-  images.populate(imageListTrain)
-  segments.populate(segmentListTrain)
-  segmentRelations.populate(relationListTrain)
+  populateTripletGroundTruth()
 
-  val imageListTest = CLEFDataset.testImages
-  val segementListTest = CLEFDataset.testSegments
-  val relationListTest = CLEFDataset.testRelations
+  triplets().foreach(t => {
+//    println(t.getArgumentId(0) + "-" + t.getArgument(0) + "_" + t.getArgumentId(1) + "-" + t.getArgument(1) + "_"
+//      + t.getArgumentId(2) + "-" + t.getArgument(2))
+    println(tripletVisionMapping(t))
 
-  images.populate(imageListTest, false)
-  segments.populate(segementListTest, false)
-  segmentRelations.populate(relationListTest, false)
+  })
 
-  ImageSVMClassifier.learn(5)
-  ImageSVMClassifier.test(segementListTest)
+// print( tripletVisionMapping(triplets().head))
 
-  ImageClassifierWeka.learn(5)
-  ImageClassifierWeka.test(segementListTest)
 }
-

@@ -4,6 +4,7 @@ import java.io.{File, IOException, PrintWriter}
 
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.mSpRLConfigurator
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.mSpRLConfigurator._
 import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes.{Phrase, Relation}
 import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors.{getCandidateRelations, getPos}
 import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.Dictionaries
@@ -30,6 +31,34 @@ object CandidateGenerator {
       val trajectorPairs = (pairs.filter(r => trClassifier(r) == "TR-SP") ~> pairToFirstArg).groupBy(x => x).keys
       if (trajectorPairs.nonEmpty) {
         val landmarkPairs = (pairs.filter(r => lmClassifier(r) == "LM-SP") ~> pairToFirstArg).groupBy(x => x).keys
+        if (landmarkPairs.nonEmpty) {
+          trajectorPairs.flatMap(tr => landmarkPairs.map(lm => createRelation(Some(tr), Some(sp), Some(lm))))
+            .filter(r => r.getArgumentIds.toList.distinct.size == 3) // distinct arguments
+            .toList
+        } else {
+          List()
+        }
+      } else {
+        List()
+      }
+    })
+  }
+
+  def generateAllTripletCandidate(): List[Relation] = {
+
+    val instances = if (isTrain) phrases.getTrainingInstances else phrases.getTestingInstances
+    val indicators = instances.filter(t => t.getId != dummyPhrase.getId && t.containsProperty("SPATIALINDICATOR_id")).toList
+      .sortBy(x => x.getSentence.getStart + x.getStart)
+    val trajectors = instances.filter(t => t.getId != dummyPhrase.getId && t.containsProperty("TRAJECTOR_id")).toList
+      .sortBy(x => x.getSentence.getStart + x.getStart)
+    val landmarks = instances.filter(t => t.getId != dummyPhrase.getId && t.containsProperty("LANDMARK_id")).toList
+      .sortBy(x => x.getSentence.getStart + x.getStart)
+
+    indicators.flatMap(sp => {
+      val pairs = phrases(sp) <~ pairToSecondArg
+      val trajectorPairs = (pairs.filter(r => if((trajectors.find(t=> t.getId==r.getArgumentId(0))).nonEmpty) true else false) ~> pairToFirstArg).groupBy(x => x).keys
+      if (trajectorPairs.nonEmpty) {
+        val landmarkPairs = (pairs.filter(r => if((landmarks.find(l=> l.getId==r.getArgumentId(0))).nonEmpty) true else false) ~> pairToFirstArg).groupBy(x => x).keys
         if (landmarkPairs.nonEmpty) {
           trajectorPairs.flatMap(tr => landmarkPairs.map(lm => createRelation(Some(tr), Some(sp), Some(lm))))
             .filter(r => r.getArgumentIds.toList.distinct.size == 3) // distinct arguments

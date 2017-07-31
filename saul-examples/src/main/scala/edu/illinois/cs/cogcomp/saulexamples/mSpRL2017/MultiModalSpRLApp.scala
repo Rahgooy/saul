@@ -37,8 +37,6 @@ object MultiModalSpRLApp extends App with Logging {
     TrajectorRoleClassifier,
     LandmarkRoleClassifier,
     IndicatorRoleClassifier,
-    TrajectorPairClassifier,
-    LandmarkPairClassifier,
     TripletGeneralTypeClassifier,
     TripletSpecificTypeClassifier,
     TripletRCC8Classifier,
@@ -68,15 +66,6 @@ object MultiModalSpRLApp extends App with Logging {
     populatePairDataFromAnnotatedCorpus(x => IndicatorRoleClassifier(x) == "Indicator")
     ReportHelper.saveCandidateList(true, pairs.getTrainingInstances.toList)
 
-    if(skipIndividualClassifiersTraining) {
-      TrajectorPairClassifier.load()
-      LandmarkPairClassifier.load()
-    }
-    else{
-      TrajectorPairClassifier.learn(iterations)
-      LandmarkPairClassifier.learn(iterations)
-    }
-
     if (jointTrain) {
       //JoinTraining using constraints
       //To make the trianing faster use the pre-trained models
@@ -89,27 +78,33 @@ object MultiModalSpRLApp extends App with Logging {
     TrajectorRoleClassifier.save()
     IndicatorRoleClassifier.save()
     LandmarkRoleClassifier.save()
-    TrajectorPairClassifier.save()
-    LandmarkPairClassifier.save()
 
-    populateTripletDataFromAnnotatedCorpus(
-      x => TrajectorPairClassifier(x),
-      x => IndicatorRoleClassifier(x),
-      x => LandmarkPairClassifier(x)
-    )
+    populateAllTripletsFromPhrases()
 
-    val goldTriplets = triplets.getTrainingInstances.filter(_.containsProperty("ActualId"))
-    TripletGeneralTypeClassifier.learn(iterations, goldTriplets)
-    TripletGeneralTypeClassifier.save()
+/*    triplets().foreach {t =>
+      print(t.getArgument(0) + "-" + t.getArgument(1) + "-" + t.getArgument(2))
+      println(tripletVisionMapping(t))
+    }*/
+    /*
+        populateTripletDataFromAnnotatedCorpus(
+          x => TrajectorPairClassifier(x),
+          x => IndicatorRoleClassifier(x),
+          x => LandmarkPairClassifier(x)
+        )
+*/
 
-    TripletSpecificTypeClassifier.learn(iterations, goldTriplets)
-    TripletSpecificTypeClassifier.save()
+        val goldTriplets = triplets.getTrainingInstances.filter(_.containsProperty("ActualId"))
+        TripletGeneralTypeClassifier.learn(iterations, goldTriplets)
+        TripletGeneralTypeClassifier.save()
 
-    TripletRCC8Classifier.learn(iterations, goldTriplets)
-    TripletRCC8Classifier.save()
+        TripletSpecificTypeClassifier.learn(iterations, goldTriplets)
+        TripletSpecificTypeClassifier.save()
 
-    TripletFoRClassifier.learn(iterations, goldTriplets)
-    TripletFoRClassifier.save()
+        TripletRCC8Classifier.learn(iterations, goldTriplets)
+        TripletRCC8Classifier.save()
+
+        TripletFoRClassifier.learn(iterations, goldTriplets)
+        TripletFoRClassifier.save()
 
   }
 
@@ -120,8 +115,6 @@ object MultiModalSpRLApp extends App with Logging {
     TrajectorRoleClassifier.load()
     LandmarkRoleClassifier.load()
     IndicatorRoleClassifier.load()
-    TrajectorPairClassifier.load()
-    LandmarkPairClassifier.load()
     TripletGeneralTypeClassifier.load()
     TripletSpecificTypeClassifier.load()
     TripletRCC8Classifier.load()
@@ -131,12 +124,13 @@ object MultiModalSpRLApp extends App with Logging {
 
     if (!useConstraints) {
 
-      populateTripletDataFromAnnotatedCorpus(
+      populateAllTripletsFromPhrases()
+/*      populateTripletDataFromAnnotatedCorpus(
         x => TrajectorPairClassifier(x),
         x => IndicatorRoleClassifier(x),
         x => LandmarkPairClassifier(x)
       )
-
+*/
       val trajectors = phrases.getTestingInstances.filter(x => TrajectorRoleClassifier(x) == "Trajector").toList
       val landmarks = phrases.getTestingInstances.filter(x => LandmarkRoleClassifier(x) == "Landmark").toList
       val indicators = phrases.getTestingInstances.filter(x => IndicatorRoleClassifier(x) == "Indicator").toList
@@ -152,12 +146,14 @@ object MultiModalSpRLApp extends App with Logging {
     }
     else {
 
+      populateAllTripletsFromPhrases()
+        /*
       populateTripletDataFromAnnotatedCorpus(
         x => SentenceLevelConstraintClassifiers.TRPairConstraintClassifier(x),
         x => SentenceLevelConstraintClassifiers.IndicatorConstraintClassifier(x),
         x => SentenceLevelConstraintClassifiers.LMPairConstraintClassifier(x)
       )
-
+*/
       val trajectors = phrases.getTestingInstances.filter(x => SentenceLevelConstraintClassifiers.TRConstraintClassifier(x) == "Trajector").toList
       val landmarks = phrases.getTestingInstances.filter(x => SentenceLevelConstraintClassifiers.LMConstraintClassifier(x) == "Landmark").toList
       val indicators = phrases.getTestingInstances.filter(x => SentenceLevelConstraintClassifiers.IndicatorConstraintClassifier(x) == "Indicator").toList
@@ -171,10 +167,9 @@ object MultiModalSpRLApp extends App with Logging {
         x => TripletRCC8Classifier(x),
         x => TripletFoRClassifier(x),
         s"$resultsDir/${expName}${suffix}.xml")
-    }
 
+    }
     ReportHelper.saveEvalResultsFromXmlFile(testFile, s"$resultsDir/${expName}${suffix}.xml", s"$resultsDir/$expName$suffix.txt")
   }
-
 }
 
