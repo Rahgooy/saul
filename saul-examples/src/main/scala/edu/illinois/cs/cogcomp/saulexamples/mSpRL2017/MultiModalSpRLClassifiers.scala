@@ -49,7 +49,7 @@ object MultiModalSpRLClassifiers {
   def tripletFeatures: List[Property[Relation]] = tripletFeatures(featureSet)
 
   def tripletFeatures(featureSet: FeatureSets): List[Property[Relation]] =
-    List(tripletWordForm, tripletHeadWordForm, tripletPos, tripletHeadWordPos, tripletPhrasePos, tripletVisionMapping,
+    List(tripletWordForm, tripletHeadWordForm, tripletPos, tripletHeadWordPos, tripletVisionMapping, tripletPhrasePos,
       tripletSemanticRole, tripletDependencyRelation, tripletSubCategorization, tripletSpatialContext, tripletHeadSpatialContext) ++
       (featureSet match {
         case FeatureSets.BaseLineWithImage => List()
@@ -162,7 +162,6 @@ object MultiModalSpRLClassifiers {
     override def feature = (pairFeatures ++ List(relationSpatialContext))
       .diff(List(pairIsImageConcept, pairNearestSegmentConceptToPhraseVector))
   }
-
 
   object TripletGeneralTypeClassifier extends Learnable(triplets) {
     def label = tripletGeneralType

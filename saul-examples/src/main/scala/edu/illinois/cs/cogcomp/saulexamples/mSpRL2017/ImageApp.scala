@@ -3,6 +3,7 @@ package edu.illinois.cs.cogcomp.saulexamples.mSpRL2017
 import java.io.File
 
 import edu.illinois.cs.cogcomp.saulexamples.data.{CLEFImageReader, WriteToFile}
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.Helpers.ImageReaderHelper
 import edu.illinois.cs.cogcomp.saulexamples.nlp.BaseTypes.{Phrase, Sentence}
 import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors._
 
@@ -11,9 +12,13 @@ import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors._
 
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalPopulateData._
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLDataModel._
-
+import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.mSpRLConfigurator._
 object ImageApp extends App {
 
+  lazy val imageReader = new ImageReaderHelper(imageDataPath, trainFile, testFile, isTrain)
+  images.populate(imageReader.getImageList, isTrain)
+  segments.populate(imageReader.getSegmentList, isTrain)
+  segmentRelations.populate(imageReader.getImageRelationList, isTrain)
 
   populateRoleDataFromAnnotatedCorpus()
 

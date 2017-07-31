@@ -118,6 +118,16 @@ object MultiModalPopulateData {
     xmlReader.setTripletRelationTypes(groundTruthTriplets)
 
   }
+
+  def populateAllTripletsFromPhrases() : Unit = {
+
+    val allTriplets = CandidateGenerator.generateAllTripletCandidate()
+
+    triplets.populate(allTriplets, isTrain)
+
+    xmlReader.setTripletRelationTypes(allTriplets)
+  }
+
   def populateTripletDataFromAnnotatedCorpus(
                                               trClassifier: (Relation) => String,
                                               spClassifier: (Phrase) => String,
@@ -130,8 +140,8 @@ object MultiModalPopulateData {
       lmClassifier,
       isTrain
     )
-    triplets.populate(candidateRelations, isTrain)
 
+    triplets.populate(candidateRelations, isTrain)
 
     xmlReader.setTripletRelationTypes(candidateRelations)
   }

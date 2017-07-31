@@ -83,7 +83,7 @@ public class CLEFImageReader {
 
         path = directory;
         // Load redefined segment relations
-//        getRedefinedRelations(directory);
+        getRedefinedRelations(directory);
         // Load Concepts
         getConcepts(directory);
         //Load Referit Data
@@ -96,7 +96,7 @@ public class CLEFImageReader {
         getallImages(directory);
 
         // Print Segments with x-align or y-align relations
-//        printImageInformation();
+        printImageInformation();
 
         System.out.println("Total Train Data " + trainingData.size());
 

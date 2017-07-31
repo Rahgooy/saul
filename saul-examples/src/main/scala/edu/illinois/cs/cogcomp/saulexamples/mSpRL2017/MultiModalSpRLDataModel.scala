@@ -10,8 +10,9 @@ import edu.illinois.cs.cogcomp.saulexamples.nlp.LanguageBaseTypeSensors._
 import edu.illinois.cs.cogcomp.saulexamples.mSpRL2017.MultiModalSpRLSensors._
 import edu.illinois.cs.cogcomp.saulexamples.nlp.SpatialRoleLabeling.Dictionaries
 import edu.illinois.cs.cogcomp.saulexamples.vision.{Image, Segment, SegmentRelation}
-
+import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
+
 /** Created by Taher on 2017-01-11.
   */
 object MultiModalSpRLDataModel extends DataModel {
@@ -467,22 +468,25 @@ object MultiModalSpRLDataModel extends DataModel {
   }
 
   val tripletVisionMapping = property(triplets) {
-    r: Relation =>
-      if(getSegmentRelations(r)) {
-        matchingcount += 1
-        total += 1;
-        writer.WriteTextln(total.toString)
-        println(total.toString)
-        writer.WriteTextln(matchingcount.toString)
-        println(matchingcount.toString)
-        true
+    r: Relation => //val imgRel = getSegmentRelations(r)
+      getSegmentRelations(r)
+//      if(getSegmentRelations(r)) {
+//        matchingcount += 1
+//        total += 1;
+//        writer.WriteTextln(total.toString)
+//        println(total.toString)
+//        writer.WriteTextln(matchingcount.toString)
+//        println(matchingcount.toString)
+        //imgRel.toList
+/*        true
       }
       else {
-        total += 1;
-        writer.WriteTextln(total.toString)
-        println(total.toString)
+//        total += 1;
+//        writer.WriteTextln(total.toString)
+//        println(total.toString)
+        //imgRel.toList
         false
-      }
+      }*/
   }
 
   val tripletSemanticRole = property(triplets, cache = true) {
@@ -656,16 +660,19 @@ object MultiModalSpRLDataModel extends DataModel {
     }
     found
   }
-  private def getSegmentRelations(r: Relation) = {
+
+  private def getSegmentRelations(r: Relation) : List[String] = {
     val (first, second, third) = getTripletArguments(r)
     var found = false
+    var newImageRelations = new ArrayBuffer[String]()
+
     if(second.getId!=dummyPhrase.getId) {
       val firstConcept = headWordFrom(first)
       val thirdConcept = headWordFrom(third)
       val img = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage
       val segs = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment
       val rels = phrases(second) ~> -sentenceToPhrase ~> -documentToSentence ~> documentToImage ~> imageToSegment ~> -segmentRelationsToSegments
-
+/*
       println("************************************")
       println(firstConcept + "," + second + "," + thirdConcept)
       println("------------------------------------")
@@ -673,7 +680,7 @@ object MultiModalSpRLDataModel extends DataModel {
       writer.WriteTextln("************************************")
       writer.WriteTextln(firstConcept + "," + second + "," + thirdConcept)
       writer.WriteTextln("------------------------------------")
-
+*/
       for(ir <- rels) {
         var firstsegConcept = ""
         var firstsegOntology : List[String] = Nil
@@ -711,31 +718,20 @@ object MultiModalSpRLDataModel extends DataModel {
             secondsegMatch = getReferitConceptMatching(thirdConcept, secondsegReferit)
         }
         if(firstsegMatch && secondsegMatch) {
-          println(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
-          writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
+//          println(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
+//          writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
+          newImageRelations += firstsegConcept + "::" + secondsegConcept + "::" + imageRelation
           found = true
-        }
-        else {
-          firstsegMatch = getImageConceptMatching(firstsegConcept, thirdConcept)
-          if(!firstsegMatch) {
-            firstsegMatch = getOntologyConceptMatching(thirdConcept, firstsegOntology)
-            if(!firstsegMatch)
-              firstsegMatch = getReferitConceptMatching(thirdConcept, firstsegOntology)
-          }
-          secondsegMatch = getImageConceptMatching(secondsegConcept, firstConcept)
-          if(!secondsegMatch) {
-            secondsegMatch = getOntologyConceptMatching(firstConcept, secondsegOntology)
-            if(!secondsegMatch)
-              secondsegMatch = getReferitConceptMatching(firstConcept, secondsegReferit)
-          }
-          if(firstsegMatch && secondsegMatch) {
-            println(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
-            writer.WriteTextln(ir.getImageId + "-" + firstsegConcept + "," + secondsegConcept + "," + imageRelation)
-            found = true
-          }
         }
       }
     }
-    found
+    if(found) {
+      newImageRelations += "true"
+    }
+    else {
+      newImageRelations += "false"
+    }
+    newImageRelations.toList
+    //found
   }
 }
